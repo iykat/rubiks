@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.19;
+pragma solidity ^0.8.0;
 
 // Uncomment this line to use console.log
 import "hardhat/console.sol";
@@ -8,6 +8,15 @@ import "hardhat/console.sol";
 
 contract UConnect {
     address public owner;
+
+    struct Payment {
+        address sender;
+        address receiver;
+        uint256 amount;
+        uint256 timestamp;
+    }
+
+    Payment[] public paymentHistory;
 
     // Set the contract deployer as the owner
     constructor() {
@@ -25,9 +34,28 @@ contract UConnect {
         return address(msg.sender).balance;
     }
 
-    // Function to send Ether to a specified address
+    // Function to send Ether to a specified address and record the payment
     function sendFunds(address payable _to, uint256 _amount) external onlyOwner {
         require(address(this).balance >= _amount, "Insufficient balance in the contract");
         _to.transfer(_amount);
+
+        // Record the payment transaction
+        paymentHistory.push(Payment({
+            sender: msg.sender,
+            receiver: _to,
+            amount: _amount,
+            timestamp: block.timestamp
+        }));
+    }
+
+    // Function to retrieve data for the previous payment and generate a receipt
+    function getPreviousPaymentData() external view returns (address sender, address receiver, uint256 amount, uint256 timestamp) {
+        require(paymentHistory.length > 0, "No payment history available");
+
+        Payment memory lastPayment = paymentHistory[paymentHistory.length - 1];
+        sender = lastPayment.sender;
+        receiver = lastPayment.receiver;
+        amount = lastPayment.amount;
+        timestamp = lastPayment.timestamp;
     }
 }
