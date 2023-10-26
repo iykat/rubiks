@@ -2,12 +2,21 @@
 pragma solidity ^0.8.19;
 
 // Uncomment this line to use console.log
-import "hardhat/console.sol";
+// import "hardhat/console.sol";
 
 // Author: @derikyu
 
 contract UConnect {
     address public owner;
+
+    struct Transaction {
+        address sender;
+        address recipient;
+        uint256 amount;
+    }
+
+    mapping(address => Transaction[]) private transactionHistory;
+
 
     // Set the contract deployer as the owner
     constructor() {
@@ -29,5 +38,22 @@ contract UConnect {
     function sendFunds(address payable _to, uint256 _amount) external onlyOwner {
         require(address(this).balance >= _amount, "Insufficient balance in the contract");
         _to.transfer(_amount);
+    }
+
+    // Function to retrieve transaction history for the caller
+    function getTransactionHistory() external view returns (Transaction[] memory) {
+        return transactionHistory[msg.sender];
+    }
+
+    // Function to make a transaction and add it to the transaction history
+    function makeTransaction(address _recipient, uint256 _amount) external {
+        require(_recipient != address(0), "Invalid recipient address");
+        require(_amount > 0, "Invalid transaction amount");
+        require(address(this).balance >= _amount, "Insufficient balance in the contract");
+
+        // Perform the transaction logic here
+
+        // Add the transaction to sender's history
+        transactionHistory[msg.sender].push(Transaction(msg.sender, _recipient, _amount));
     }
 }
