@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.19;
 
-// Uncomment this line to use console.log
-import "hardhat/console.sol";
-
-// Author: @derikyu
+import "https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/utils/cryptography/ECDSA.sol";
 
 contract UConnect {
+    using ECDSA for bytes32;
+
     address public owner;
+    mapping(address => bytes32) private pinHashes;
 
     // Set the contract deployer as the owner
     constructor() {
@@ -20,7 +20,7 @@ contract UConnect {
         _;
     }
 
-    // This function retrieves the balance of the caller's address
+    // Function to check the balance of the calling address
     function checkBalance() external view returns (uint256) {
         return address(msg.sender).balance;
     }
@@ -29,5 +29,18 @@ contract UConnect {
     function sendFunds(address payable _to, uint256 _amount) external onlyOwner {
         require(address(this).balance >= _amount, "Insufficient balance in the contract");
         _to.transfer(_amount);
+    }
+
+    // Function to allow a user to set a PIN
+    function setPin(string memory _pin) external {
+        require(bytes(_pin).length == 4, "PIN must be 4 characters long");  // Assuming a 4-digit PIN
+        bytes32 hashedPin = keccak256(abi.encodePacked(_pin));
+        pinHashes[msg.sender] = hashedPin;
+    }
+
+    // Function to validate the user's PIN
+    function validatePin(string memory _pin) external view returns (bool) {
+        bytes32 hashedPin = keccak256(abi.encodePacked(_pin));
+        return pinHashes[msg.sender] == hashedPin;
     }
 }
