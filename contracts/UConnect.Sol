@@ -1,0 +1,33 @@
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.19;
+
+// Uncomment this line to use console.log
+import "hardhat/console.sol";
+
+// Author: @derikyu
+
+contract UConnect {
+    address public owner;
+
+    // Set the contract deployer as the owner
+    constructor() {
+        owner = msg.sender;
+    }
+
+    // Modifier to restrict function access to only the owner
+    modifier onlyOwner() {
+        require(msg.sender == owner, "Not the contract owner");
+        _;
+    }
+
+    // This function retrieves the balance of the caller's address
+    function checkBalance() external view returns (uint256) {
+        return address(msg.sender).balance;
+    }
+
+    // Function to send Ether to a specified address
+    function sendFunds(address payable _to, uint256 _amount) external onlyOwner {
+        require(address(this).balance >= _amount, "Insufficient balance in the contract");
+        _to.transfer(_amount);
+    }
+}
